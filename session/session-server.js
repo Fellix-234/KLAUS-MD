@@ -429,7 +429,7 @@ app.get('/export', async (_, res) => {
   res.json({ ok: true, session: base64 });
 });
 
-const port = settings.SESSION_SERVER_PORT || settings.PORT || 3000;
+const port = settings.PORT || settings.SESSION_SERVER_PORT || 3000;
 app.listen(port, () => {
   logger.info(`Session server running at http://localhost:${port}`);
 });
