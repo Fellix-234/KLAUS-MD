@@ -1,0 +1,13 @@
+services:
+  klaus-md:
+    build: .
+    container_name: klaus-md
+    ports:
+      - "3000:3000"
+    environment:
+      - APP_MODE=${APP_MODE:-bot}
+    restart: unless-stopped
+    volumes:
+      - ./session/auth_info_baileys:/app/session/auth_info_baileys
+      - ./session_status.json:/app/session_status.json
+      - ./bot_settings.json:/app/bot_settings.json

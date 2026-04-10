@@ -1,0 +1,35 @@
+{
+  "name": "klaus-md",
+  "version": "1.0.0",
+  "description": "Klaus MD WhatsApp bot with status-style command UX",
+  "main": "start.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node start.js",
+    "start:panel": "node start.js",
+    "start:heroku": "node start.js",
+    "start:railway": "node start.js",
+    "start:katabump": "node start.js",
+    "start:both": "node -e \"process.env.APP_MODE='both'; require('./start')\"",
+    "start:bot": "node index.js",
+    "start:session": "node session/session-server.js",
+    "dev": "node --watch index.js",
+    "session": "node session/session-server.js"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.8",
+    "axios": "^1.8.4",
+    "chalk": "^4.1.2",
+    "file-type": "^19.6.0",
+    "moment-timezone": "^0.5.47",
+    "node-cache": "^5.1.2",
+    "pino-pretty": "^11.2.2",
+    "qrcode": "^1.5.4",
+    "express": "^4.21.2",
+    "pino": "^9.6.0"
+  }
+}

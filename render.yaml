@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: klaus-md
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: APP_MODE
+        value: bot
+      - key: MODE
+        value: public
+      - key: PREFIX
+        value: .
+      - key: BOT_NAME
+        value: KLAUS MD
+      - key: PORT
+        value: 3000

@@ -1,0 +1,77 @@
+{
+  "name": "klaus-md",
+  "description": "KLAUS MD WhatsApp bot",
+  "repository": "https://github.com/fellix-234/KLAUS-MD",
+  "logo": "https://raw.githubusercontent.com/heroku/node-js-getting-started/main/public/node.svg",
+  "keywords": [
+    "whatsapp",
+    "baileys",
+    "bot",
+    "klaus-md"
+  ],
+  "stack": "heroku-24",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "APP_MODE": {
+      "description": "Runtime mode: bot, session, or both",
+      "value": "bot"
+    },
+    "MODE": {
+      "description": "Bot visibility mode: public or private",
+      "value": "public"
+    },
+    "PREFIX": {
+      "description": "Command prefix",
+      "value": "."
+    },
+    "BOT_NAME": {
+      "description": "Bot display name",
+      "value": "KLAUS MD"
+    },
+    "OWNER_NUMBER": {
+      "description": "Owner number in international format without +",
+      "required": true
+    },
+    "OWNER_NAME": {
+      "description": "Owner display name",
+      "value": "Klaus Owner"
+    },
+    "SESSION": {
+      "description": "Base64 Baileys creds.json content (optional if pairing later)",
+      "required": false
+    },
+    "SESSION_SERVER_PORT": {
+      "description": "Session server port when APP_MODE=session or both",
+      "value": "3001"
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI key for .chatgpt",
+      "required": false
+    },
+    "GEMINI_API_KEY": {
+      "description": "Gemini key for .gemini",
+      "required": false
+    },
+    "COPILOT_API_KEY": {
+      "description": "OpenAI-compatible key for .copilot",
+      "required": false
+    },
+    "DOWNLOADER_ENABLED": {
+      "description": "Enable downloader provider",
+      "value": "false"
+    },
+    "DOWNLOADER_API_BASE_URL": {
+      "description": "Downloader API base URL",
+      "required": false
+    },
+    "DOWNLOADER_API_KEY": {
+      "description": "Downloader API key",
+      "required": false
+    }
+  }
+}
