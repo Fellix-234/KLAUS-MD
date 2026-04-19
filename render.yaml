@@ -3,8 +3,8 @@ services:
     name: klaus-md
     env: node
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm run build:obf
+    startCommand: node dist/start.js
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
@@ -17,5 +17,7 @@ services:
         value: .
       - key: BOT_NAME
         value: KLAUS MD
+      - key: BOT_SOURCE_DIR
+        value: /app/source
       - key: PORT
         value: 3000

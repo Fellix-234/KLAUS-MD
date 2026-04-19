@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const pino = require('pino');
+
 const {
   default: makeWASocket,
   fetchLatestBaileysVersion,
@@ -463,3 +464,4 @@ const port = settings.PORT || settings.SESSION_SERVER_PORT || 3000;
 app.listen(port, () => {
   logger.info(`Session server running at http://localhost:${port}`);
 });
+

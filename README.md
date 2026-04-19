@@ -63,8 +63,31 @@ npm start
 ```
 
 - Node.js version: 18+
-- Main startup file: `start.js`
+- Main startup file: `index.js`
 - Session server: `npm run session`
+
+## Private Source Mode
+
+If you want to keep the command code in a separate private repo, point the launcher at it with `BOT_SOURCE_DIR`.
+
+Example:
+
+```bash
+BOT_SOURCE_DIR=./private-bot npm start
+```
+
+For Docker builds, the image also supports optional `BOT_SOURCE_REPO`, `BOT_SOURCE_BRANCH`, and `BOT_SOURCE_TOKEN` build arguments to clone a private source repo into `/app/source`.
+
+## Obfuscation Build
+
+To generate an obfuscated runtime bundle, run:
+
+```bash
+npm run build:obf
+node dist/start.js
+```
+
+The generated `dist/` folder is ignored by git and is meant to be built locally or during deployment.
 
 ## Developer
 

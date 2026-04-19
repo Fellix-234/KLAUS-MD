@@ -32,6 +32,10 @@ const settings = {
   SESSION_SERVER_PORT: parsePort(fromEnv('SESSION_SERVER_PORT', '3001'), 3001),
   KEEP_ALIVE_URL: fromEnv('KEEP_ALIVE_URL', ''),
   BOT_NAME: fromEnv('BOT_NAME', 'KLAUS MD'),
+  BOT_SOURCE_DIR: fromEnv('BOT_SOURCE_DIR', ''),
+  BOT_SOURCE_REPO: fromEnv('BOT_SOURCE_REPO', ''),
+  BOT_SOURCE_BRANCH: fromEnv('BOT_SOURCE_BRANCH', 'main'),
+  BOT_SOURCE_TOKEN: fromEnv('BOT_SOURCE_TOKEN', ''),
   APP_MODE: fromEnv('APP_MODE', 'bot'),
   AI: {
     OPENAI_API_KEY: fromEnv('OPENAI_API_KEY', ''),

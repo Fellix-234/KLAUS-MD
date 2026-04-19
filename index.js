@@ -2,6 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const pino = require('pino');
+const { resolveSourceDir } = require('./utils/runtime');
+
+const externalSourceDir = resolveSourceDir();
+
+if (externalSourceDir) {
+  require(path.join(externalSourceDir, 'index.js'));
+} else {
 const {
   default: makeWASocket,
   DisconnectReason,
@@ -106,6 +113,8 @@ function startHealthReporter() {
       rss: formatMemoryMB(mem.rss),
       heapUsed: formatMemoryMB(mem.heapUsed)
     });
+
+    persistRuntimeMetrics();
   }, 60 * 1000);
 }
 
@@ -158,6 +167,23 @@ function writeSessionStatus(update) {
   }
   const merged = { ...current, ...update };
   fs.writeFileSync(sessionStatusPath, JSON.stringify(merged, null, 2));
+}
+
+function persistRuntimeMetrics(extra = {}) {
+  writeSessionStatus({
+    runtime: {
+      updatedAt: new Date().toISOString(),
+      uptimeSec: Math.floor(process.uptime()),
+      messages: metrics.messages,
+      commands: metrics.commands,
+      commandFailures: metrics.commandFailures,
+      statusReads: metrics.statusReads,
+      autoReacts: metrics.autoReacts,
+      reconnects: metrics.reconnects,
+      avgCommandMs: Number(metrics.commands ? (metrics.totalCommandMs / metrics.commands).toFixed(1) : 0)
+    },
+    ...extra
+  });
 }
 
 async function sendStatusLike(chatId, text, quotedMsg, options = {}) {
@@ -219,15 +245,10 @@ function setupKeepAlive() {
     logger.info(`Keep-alive web server listening on :${ENV.PORT}`);
   });
 
+  // WARNING: Self-pinging on Render's free tier is an instant violation of their TOS.
+  // We have disabled this to prevent your account from being suspended.
   if (ENV.KEEP_ALIVE_URL) {
-    setInterval(async () => {
-      try {
-        await fetch(ENV.KEEP_ALIVE_URL, { method: 'GET' });
-        logger.info('Keep-alive ping sent successfully.');
-      } catch (err) {
-        logger.warn(`Keep-alive ping failed: ${err.message}`);
-      }
-    }, 4 * 60 * 1000);
+    logger.info('Keep-alive ping skipped (Forbidden on Render free tier).');
   }
 }
 
@@ -277,7 +298,10 @@ async function startBot() {
       if (shouldReconnect) metrics.reconnects += 1;
       logger.connection(`Socket closed. reconnect=${shouldReconnect} code=${statusCode || 'unknown'}`);
       logger.warn(`Connection closed. reconnect=${shouldReconnect} code=${statusCode || 'unknown'}`);
-      if (shouldReconnect) startBot();
+      if (shouldReconnect) {
+        logger.info('Waiting 5 seconds before reconnecting to prevent CPU overload...');
+        setTimeout(() => startBot(), 5000);
+      }
       else logger.error('Session logged out. Regenerate session and restart bot.');
     }
   });
@@ -351,7 +375,7 @@ async function startBot() {
 
     logger.flow(`Executing ${command.name} for ${sender}`);
     logger.command(command.name, sender);
-    logger.commandStart(command.name, sender, args.length);
+    logger.commandStart(command.name, sender, args);
     metrics.commands += 1;
     const startedAt = Date.now();
 
@@ -376,24 +400,41 @@ async function startBot() {
       metrics.totalCommandMs += elapsed;
       logger.commandEnd(command.name, elapsed);
       logger.success(`Command ${command.name} completed in ${elapsed}ms`);
+      persistRuntimeMetrics();
     } catch (err) {
       metrics.commandFailures += 1;
       logger.error(`Command ${command.name} failed: ${err.message}`);
+      logger.errorTrace(err, `command:${command.name}`);
+      persistRuntimeMetrics();
       await sendStatusLike(chatId, '❌ Command failed. Check logs.', msg, { typingMs: 400 });
     }
   });
 
   writeSessionStatus({
     generatedAt: new Date().toISOString(),
-    lastSessionLength: ENV.SESSION ? ENV.SESSION.length : 0
+    lastSessionLength: ENV.SESSION ? ENV.SESSION.length : 0,
+    lastBootAt: new Date().toISOString()
   });
+
+  persistRuntimeMetrics();
 }
 
 setupKeepAlive();
 loadCommands();
 logStartupProfile();
 startHealthReporter();
+
+process.on('uncaughtException', (err) => {
+  logger.errorTrace(err, 'uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  logger.errorTrace(err, 'unhandledRejection');
+});
+
 startBot().catch((err) => {
-  logger.error(`Fatal startup error: ${err.message}`);
+  logger.errorTrace(err, 'fatal-startup');
   process.exit(1);
 });
+}

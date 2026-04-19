@@ -28,6 +28,35 @@ module.exports = {
         SESSION_SERVER_PORT: 3001,
         PORT: 3001
       }
+    },
+    {
+      name: 'klaus-md-bot-obf',
+      script: 'dist/start.js',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '300M',
+      env: {
+        NODE_ENV: 'production',
+        APP_MODE: 'bot',
+        PORT: 3000
+      }
+    },
+    {
+      name: 'klaus-md-session-obf',
+      script: 'dist/start.js',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '300M',
+      env: {
+        NODE_ENV: 'production',
+        APP_MODE: 'session',
+        SESSION_SERVER_PORT: 3001,
+        PORT: 3001
+      }
     }
   ]
 };

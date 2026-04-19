@@ -1,5 +1,23 @@
+const fs = require('fs');
 const { fork } = require('child_process');
+const path = require('path');
 const settings = require('./setting');
+const { resolveSourceDir } = require('./utils/runtime');
+
+const externalSourceDir = resolveSourceDir();
+
+if (externalSourceDir) {
+  const externalStart = path.join(externalSourceDir, 'start.js');
+  const externalIndex = path.join(externalSourceDir, 'index.js');
+
+  if (fs.existsSync(externalStart)) {
+    require(externalStart);
+  } else if (fs.existsSync(externalIndex)) {
+    require(externalIndex);
+  } else {
+    throw new Error(`No start.js or index.js found in BOT_SOURCE_DIR: ${externalSourceDir}`);
+  }
+} else {
 
 const mode = process.env.APP_MODE || settings.APP_MODE;
 const mainPort = process.env.PORT || String(settings.PORT);
@@ -46,4 +64,5 @@ if (mode === 'both') {
   require('./session/session-server');
 } else {
   require('./index');
+}
 }

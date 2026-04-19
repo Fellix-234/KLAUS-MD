@@ -37,7 +37,10 @@ const categoryMap = {
         '.autotyping',
         '.autorecording',
         '.setsudo',
-        '.setstickerpack'
+        '.setstickerpack',
+        '.logs',
+        '.cmdlogs',
+        '.metrics'
       ],
       'set',
       61
