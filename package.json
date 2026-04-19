@@ -9,12 +9,6 @@
   },
   "scripts": {
     "start": "node index.js",
-    "build:obf": "node scripts/obfuscate.js",
-    "start:obf": "node dist/start.js",
-    "start:panel": "node index.js",
-    "start:heroku": "node index.js",
-    "start:railway": "node index.js",
-    "start:katabump": "node index.js",
     "start:bot": "node index.js",
     "start:session": "node session/session-server.js",
     "dev": "node --watch index.js",
@@ -31,7 +25,6 @@
     "pino-pretty": "^11.2.2",
     "qrcode": "^1.5.4",
     "express": "^4.21.2",
-    "pino": "^9.6.0",
-    "javascript-obfuscator": "^5.4.1"
+    "pino": "^9.6.0"
   }
 }

@@ -78,17 +78,6 @@ BOT_SOURCE_DIR=./private-bot npm start
 
 For Docker builds, the image also supports optional `BOT_SOURCE_REPO`, `BOT_SOURCE_BRANCH`, and `BOT_SOURCE_TOKEN` build arguments to clone a private source repo into `/app/source`.
 
-## Obfuscation Build
-
-To generate an obfuscated runtime bundle, run:
-
-```bash
-npm run build:obf
-node dist/start.js
-```
-
-The generated `dist/` folder is ignored by git and is meant to be built locally or during deployment.
-
 ## Developer
 
 <p align="center">
