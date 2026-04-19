@@ -21,10 +21,45 @@ app.use('/assets', express.static(path.join(__dirname, '..', 'lib')));
 const sessionRoot = path.join(__dirname, 'auth_info_baileys');
 const credsPath = path.join(sessionRoot, 'creds.json');
 const statusPath = path.join(__dirname, '..', 'session_status.json');
+const pairingLabel = String(process.env.PAIRING_LABEL || 'yupradev').trim() || 'yupradev';
 
 let pairingCode = null;
 let socketReady = false;
 let activeSocket = null;
+
+function waitForSocketConnection(sock, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error('Socket connection timeout while preparing pairing code.'));
+    }, timeoutMs);
+
+    const onUpdate = ({ connection, lastDisconnect }) => {
+      if (settled) return;
+
+      if (connection === 'open' || connection === 'connecting') {
+        settled = true;
+        clearTimeout(timer);
+        sock.ev.off('connection.update', onUpdate);
+        resolve();
+        return;
+      }
+
+      if (connection === 'close') {
+        const reason = lastDisconnect?.error?.message || 'connection closed';
+        settled = true;
+        clearTimeout(timer);
+        sock.ev.off('connection.update', onUpdate);
+        reject(new Error(`Socket closed before pairing: ${reason}`));
+      }
+    };
+
+    sock.ev.on('connection.update', onUpdate);
+  });
+}
 
 function writeStatus(update) {
   let current = {};
@@ -77,13 +112,16 @@ async function buildSocket(phoneNumber) {
   });
 
   let lastError = null;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
-      await delay(1500);
+      // Give WhatsApp transport time to stabilize before requesting a code.
+      await waitForSocketConnection(sock, 15000);
+      await delay(1500 + (attempt - 1) * 700);
       pairingCode = await sock.requestPairingCode(phoneNumber);
       break;
     } catch (err) {
       lastError = err;
+      logger.warn(`Pairing attempt ${attempt}/5 failed: ${err.message}`);
     }
   }
 
@@ -91,11 +129,12 @@ async function buildSocket(phoneNumber) {
     throw new Error(lastError?.message || 'Unable to generate pairing code. Please try again.');
   }
 
-  logger.session(`Pairing code generated for ${phoneNumber}`);
+  logger.session(`Pairing session ready for ${phoneNumber} (${pairingLabel})`);
 
   writeStatus({
     generatedAt: new Date().toISOString(),
-    lastPairingCode: pairingCode
+    lastPairingCode: pairingCode,
+    pairingLabel
   });
 
   return sock;
@@ -239,6 +278,16 @@ app.get('/', (_, res) => {
         .gray-btn {
           background: #475569;
         }
+        .tag {
+          margin-top: 0.6rem;
+          display: inline-flex;
+          padding: 0.45rem 0.8rem;
+          border-radius: 999px;
+          background: rgba(125, 211, 252, 0.12);
+          color: #cdefff;
+          font-size: 0.85rem;
+          border: 1px solid rgba(125, 211, 252, 0.2);
+        }
       </style>
     </head>
     <body>
@@ -247,6 +296,7 @@ app.get('/', (_, res) => {
           <img src="/assets/menu.jpg" alt="KLAUS menu" class="profile" />
           <h1>${settings.BOT_NAME}</h1>
           <p class="subtitle">Session Pairing Center</p>
+          <div class="tag">Pairing label: ${pairingLabel}</div>
           <div id="clock" class="clock">Loading time...</div>
           <button class="hero-btn" onclick="goToPairing()">Get Session</button>
         </div>

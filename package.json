@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node index.js",
     "build:obf": "node scripts/obfuscate.js",
+    "build:obf:commands": "node scripts/obfuscate-commands.js",
     "start:obf": "node dist/start.js",
     "start:bot": "node index.js",
     "start:panel": "node index.js",
