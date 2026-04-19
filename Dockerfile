@@ -31,4 +31,4 @@ ENV BOT_SOURCE_DIR=/app/source
 
 EXPOSE 3000
 
-CMD ["node", "dist/start.js"]
+CMD ["node", "dist/index.js"]
