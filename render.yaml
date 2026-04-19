@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     buildCommand: npm run build:obf
-    startCommand: node dist/start.js
+    startCommand: node dist/index.js
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
