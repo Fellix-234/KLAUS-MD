@@ -1,6 +1,5 @@
 node_modules/
 session/auth_info_baileys/
-bot_settings.json
 dist/
 *.log
 .vscode/
