@@ -11,7 +11,7 @@
     "start": "node index.js",
     "build:obf": "node scripts/obfuscate.js",
     "build:obf:commands": "node scripts/obfuscate-commands.js",
-    "start:obf": "node dist/start.js",
+    "start:obf": "node dist/index.js",
     "start:bot": "node index.js",
     "start:panel": "node index.js",
     "start:heroku": "node index.js",
