@@ -22,8 +22,6 @@ RUN if [ -n "$BOT_SOURCE_REPO" ]; then \
                         git clone --depth 1 --branch "$BOT_SOURCE_BRANCH" "$repo_url" /app/source; \
                 fi
 
-RUN npm run build:obf
-
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV APP_MODE=bot
@@ -31,4 +29,4 @@ ENV BOT_SOURCE_DIR=/app/source
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "index.js"]

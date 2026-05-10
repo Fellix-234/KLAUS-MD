@@ -3,8 +3,8 @@ services:
     name: klaus-md
     env: node
     plan: free
-    buildCommand: npm run build:obf
-    startCommand: node dist/index.js
+    buildCommand: npm install
+    startCommand: node index.js
     autoDeploy: true
     envVars:
       - key: NODE_VERSION

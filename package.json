@@ -10,9 +10,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "build:obf": "node scripts/obfuscate.js",
-    "build:obf:commands": "node scripts/obfuscate-commands.js",
-    "start:obf": "node dist/index.js",
+    "start:obf": "node index.js",
     "start:bot": "node index.js",
     "start:panel": "node index.js",
     "start:heroku": "node index.js",
@@ -33,7 +31,6 @@
     "pino-pretty": "^11.2.2",
     "qrcode": "^1.5.4",
     "express": "^4.21.2",
-    "pino": "^9.6.0",
-    "javascript-obfuscator": "^5.4.1"
+    "pino": "^9.6.0"
   }
 }
