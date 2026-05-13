@@ -184,19 +184,58 @@ function startHealthReporter() {
   }, 60 * 60 * 1000);
 }
 
-function ensureAuthFromEnv() {
-  if (!ENV.SESSION) return;
+// ==================== MEGA SESSION DOWNLOADER ====================
+const MEGA_SESSION_PREFIX = 'blinder~';
 
-  const authFile = path.join(authDir, 'creds.json');
+async function downloadMegaSession() {
+  const megaSession = ENV.MEGA_SESSION || process.env.MEGA_SESSION;
+  if (!megaSession || !megaSession.startsWith(MEGA_SESSION_PREFIX)) {
+    logger.info('No valid MEGA_SESSION variable found. Using existing session folder if available.');
+    return false;
+  }
 
-  if (fs.existsSync(authFile) && fs.statSync(authFile).size > 0) {
+  try {
+    const megaFileId = megaSession.replace(MEGA_SESSION_PREFIX, '');
+    logger.info(`Downloading session from MEGA: ${megaFileId}`);
+
+    const { File } = require('megajs');
+    const file = File.fromURL(`https://mega.nz/file/${megaFileId}`);
+
+    const credsData = await new Promise((resolve, reject) => {
+      file.loadAttributes((err) => {
+        if (err) return reject(err);
+        file.download((err, data) => {
+          if (err) return reject(err);
+          resolve(data);
+        });
+      });
+    });
+
+    // Save the downloaded creds.json to auth directory
+    fs.mkdirSync(authDir, { recursive: true });
+    const credsPath = path.join(authDir, 'creds.json');
+    fs.writeFileSync(credsPath, credsData);
+    logger.success('MEGA session downloaded and saved to auth folder.');
+    return true;
+  } catch (error) {
+    logger.error(`MEGA download failed: ${error.message}`);
+    return false;
+  }
+}
+
+async function ensureAuthFromMega() {
+  // If auth folder already has valid creds.json, skip download
+  const credsPath = path.join(authDir, 'creds.json');
+  if (fs.existsSync(credsPath) && fs.statSync(credsPath).size > 0) {
+    logger.info('Existing session found. Skipping MEGA download.');
     return;
   }
 
-  fs.mkdirSync(authDir, { recursive: true });
-  const credentials = Buffer.from(ENV.SESSION, 'base64').toString('utf8');
-  fs.writeFileSync(authFile, credentials);
-  logger.session('Loaded session credentials from SESSION env var.');
+  // Try downloading from MEGA
+  const downloaded = await downloadMegaSession();
+  if (!downloaded) {
+    logger.warn('No valid session available. Bot will require QR scanning or pairing code.');
+  }
 }
 
 async function sendStatusLike(chatId, text, quoted, options = {}) {
@@ -265,8 +304,8 @@ function setupKeepAlive() {
 async function startBot() {
   logger.step(3, 6, 'Preparing Baileys auth and socket');
 
-  ensureAuthFromEnv();
-  fs.mkdirSync(authDir, { recursive: true });
+  // Ensure session from MEGA if available
+  await ensureAuthFromMega();
 
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
   const { version } = await fetchLatestBaileysVersion();
@@ -423,7 +462,7 @@ async function startBot() {
   writeSessionStatus({
     generatedAt: new Date().toISOString(),
     lastBootAt: new Date().toISOString(),
-    lastSessionLength: ENV.SESSION ? ENV.SESSION.length : 0
+    megaSessionPresent: Boolean(ENV.MEGA_SESSION || process.env.MEGA_SESSION)
   });
 
   persistRuntimeMetrics();
