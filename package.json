@@ -28,6 +28,7 @@
     "file-type": "^19.6.0",
     "moment-timezone": "^0.5.47",
     "node-cache": "^5.1.2",
+    "megajs": "^1.2.0",
     "pino-pretty": "^11.2.2",
     "qrcode": "^1.5.4",
     "express": "^4.21.2",
