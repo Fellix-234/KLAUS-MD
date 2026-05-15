@@ -1,6 +1,6 @@
 /*
   ──────────────────────────────────────────────
-   🧠  KLAUS MD — Environment Configuration
+    KLAUS MD — Environment Configuration
   ──────────────────────────────────────────────
   All settings are loaded from process.env with
   sensible fallbacks.  Keep this file clean and
@@ -33,7 +33,7 @@ function parseBool(value, fallback) {
 
 // ─── Core Bot Settings ───────────────────────
 const settings = {
-  // 🔑 Session (use SESSION=blinder~YOUR_MEGA_FILE_ID in Pterodactyl)
+  // 🔑 Session use SESSION=blinder~
   SESSION: fromEnv('SESSION', ''),
 
   // ⚙️ Basic Behaviour
