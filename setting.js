@@ -28,7 +28,7 @@ const settings = {
   DEVELOPER_NUMBER: cleanNumber(fromEnv('DEVELOPER_NUMBER', '254725391914')),
   DEVELOPER_NAME: fromEnv('DEVELOPER_NAME', 'Warrior Felix'),
   MODE: fromEnv('MODE', 'public'),
-  PORT: parsePort(fromEnv('PORT', '3000'), 3000),
+  PORT: parsePort(fromEnv('PORT', '3001'), 3000),
   SESSION_SERVER_PORT: parsePort(fromEnv('SESSION_SERVER_PORT', '3001'), 3001),
   KEEP_ALIVE_URL: fromEnv('KEEP_ALIVE_URL', ''),
   BOT_NAME: fromEnv('BOT_NAME', 'KLAUS MD'),
