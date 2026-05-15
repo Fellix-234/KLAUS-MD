@@ -1,152 +1,153 @@
-const chalk = require('chalk');
-const fs = require('fs');
-const path = require('path');
+// logger.js — KLAUS-MD Ultimate Logger
 
-const logsDir = path.join(__dirname, '..', 'logs');
-const botLogPath = path.join(logsDir, 'bot.log');
-const commandLogPath = path.join(logsDir, 'commands.log');
-const errorLogPath = path.join(logsDir, 'errors.log');
-const MAX_LOG_SIZE_BYTES = 2 * 1024 * 1024;
+const fs = require("fs")
+const path = require("path")
+const { createLogger, format, transports } = require("winston")
+const chalk = require("chalk")
 
-function ensureLogFiles() {
-  if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
-  if (!fs.existsSync(botLogPath)) fs.writeFileSync(botLogPath, '');
-  if (!fs.existsSync(commandLogPath)) fs.writeFileSync(commandLogPath, '');
-  if (!fs.existsSync(errorLogPath)) fs.writeFileSync(errorLogPath, '');
-}
+const BOT_NAME = "KLAUS-MD"
+const ENV = process.env.NODE_ENV || "development"
 
-function rotateIfNeeded(filePath) {
-  try {
-    if (!fs.existsSync(filePath)) return;
-    const stat = fs.statSync(filePath);
-    if (stat.size < MAX_LOG_SIZE_BYTES) return;
+// Create logs folder automatically
+const logDir = path.join(__dirname, "logs")
+if (!fs.existsSync(logDir)) fs.mkdirSync(logDir)
 
-    const rotatedPath = `${filePath}.1`;
-    if (fs.existsSync(rotatedPath)) fs.rmSync(rotatedPath, { force: true });
-    fs.renameSync(filePath, rotatedPath);
-    fs.writeFileSync(filePath, '');
-  } catch {
-    // Ignore rotation failures to avoid affecting bot runtime.
-  }
-}
+// Timestamp
+const timeFormat = format.timestamp({
+  format: "YYYY-MM-DD HH:mm:ss"
+})
 
-function appendLogLine(filePath, text) {
-  try {
-    ensureLogFiles();
-    rotateIfNeeded(filePath);
-    fs.appendFileSync(filePath, `${text}\n`);
-  } catch {
-    // Never crash bot because logging to file failed.
-  }
-}
+// Console format
+const logFormat = format.printf(({ level, message, timestamp, stack }) => {
+  return stack
+    ? `${timestamp} | ${level.toUpperCase()} | ${stack}`
+    : `${timestamp} | ${level.toUpperCase()} | ${message}`
+})
 
-function stamp() {
-  const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  const ss = String(now.getSeconds()).padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
-}
+// Winston core logger
+const logger = createLogger({
+  level: ENV === "production" ? "info" : "debug",
+  format: format.combine(
+    timeFormat,
+    format.errors({ stack: true }),
+    format.splat(),
+    format.json()
+  ),
+  transports: [
+    new transports.File({ filename: "logs/error.log", level: "error" }),
+    new transports.File({ filename: "logs/combined.log" })
+  ]
+})
 
-function line(level, msg, color) {
-  const levelTag = String(level).padEnd(7, ' ');
-  const out = `[${stamp()}] ${levelTag} ${msg}`;
-  console.log(color(out));
-  appendLogLine(botLogPath, out);
-}
+logger.add(
+  new transports.Console({
+    format: format.combine(timeFormat, logFormat)
+  })
+)
 
-function section(title, detail, color) {
-  const banner = `==== ${String(title).toUpperCase()} ====`;
-  console.log(color(banner));
-  if (detail) {
-    console.log(color(detail));
-  }
-}
 
-function divider(char = '-', len = 72) {
-  console.log(chalk.gray(String(char).repeat(len)));
-}
-
-function kvBlock(title, pairs) {
-  const entries = Object.entries(pairs || {});
-  section(title, null, chalk.bold.white);
-  for (const [key, value] of entries) {
-    const label = String(key).padEnd(18, ' ');
-    console.log(chalk.gray(`  ${label}: `) + chalk.white(String(value)));
-  }
-  divider();
-}
-
-function obelisk(title, subtitle) {
-  const line = '='.repeat(74);
-  console.log(chalk.gray(line));
-  console.log(chalk.bold.white(`  ${String(title).toUpperCase()}`));
-  if (subtitle) {
-    console.log(chalk.gray(`  ${subtitle}`));
-  }
-  console.log(chalk.gray(line));
-}
-
+// 🌈 Pretty logger wrapper
 const log = {
-  info: (msg) => line('INFO', msg, chalk.cyan),
-  success: (msg) => line('SUCCESS', msg, chalk.green),
-  warn: (msg) => line('WARN', msg, chalk.yellow),
-  error: (msg) => {
-    line('ERROR', msg, chalk.red);
-    appendLogLine(errorLogPath, `[${stamp()}] ERROR   ${msg}`);
-  },
-  errorTrace: (err, context = 'runtime') => {
-    const message = err?.message || String(err || 'Unknown error');
-    const stack = err?.stack || 'No stack trace available';
-    line('ERROR', `${context}: ${message}`, chalk.red);
-    appendLogLine(errorLogPath, `[${stamp()}] ERROR   ${context}: ${message}`);
-    appendLogLine(errorLogPath, stack);
-  },
-  command: (command, sender) => {
-    line('COMMAND', `${command} by ${sender}`, chalk.magenta);
-    appendLogLine(commandLogPath, `[${stamp()}] COMMAND ${command} by ${sender}`);
-  },
-  flow: (msg) => section('Flow', msg, chalk.bold.blue),
-  connection: (msg) => section('Connection', msg, chalk.bold.cyan),
-  boot: (title, subtitle) => obelisk(title, subtitle),
-  step: (current, total, msg) => {
-    line('STEP', `[${String(current).padStart(2, '0')}/${String(total).padStart(2, '0')}] ${msg}`, chalk.bold.yellow);
-  },
-  stat: (msg) => line('STAT', msg, chalk.bold.white),
-  incoming: (chatId, sender, isGroup, size) => {
-    line('INBOUND', `chat=${chatId} sender=${sender} group=${isGroup} chars=${size}`, chalk.cyan);
-  },
-  commandStart: (name, sender, args = []) => {
-    const argsCount = Array.isArray(args) ? args.length : 0;
-    const preview = Array.isArray(args) && args.length
-      ? args.slice(0, 5).join(' ').slice(0, 80)
-      : '-';
-    line('EXEC', `start command=${name} sender=${sender} args=${argsCount}`, chalk.magentaBright);
-    appendLogLine(
-      commandLogPath,
-      `[${stamp()}] START command=${name} sender=${sender} args=${argsCount} preview=${preview}`
-    );
-  },
-  commandEnd: (name, ms) => {
-    line('EXEC', `done command=${name} latency=${ms}ms`, chalk.greenBright);
-    appendLogLine(commandLogPath, `[${stamp()}] DONE command=${name} latency=${ms}ms`);
-  },
-  divider,
-  kvBlock,
-  menu: (msg) => line('MENU', msg, chalk.blue),
-  session: (msg) => line('SESSION', msg, chalk.hex('#ff8800')),
-  banner: ({ botName, prefix, mode }) => {
-    const width = 58;
-    const border = '+'.padEnd(width - 1, '-') + '+';
-    const row = (label, value) => `| ${label.padEnd(9, ' ')}: ${String(value).padEnd(42, ' ')}|`;
 
-    console.log(chalk.green(border));
-    console.log(chalk.green(row('BOT', `${botName} ONLINE`)));
-    console.log(chalk.white(row('PREFIX', prefix)));
-    console.log(chalk.white(row('MODE', mode)));
-    console.log(chalk.white(row('TIME', new Date().toLocaleString())));
-    console.log(chalk.green(border));
+  // 🚀 BOT START
+  startup: () => {
+    const text = `🚀 ${BOT_NAME} STARTED (${ENV.toUpperCase()})`
+    console.log(chalk.bold.green(text))
+    logger.info(text)
+  },
+
+  shutdown: () => {
+    const text = `🛑 ${BOT_NAME} STOPPED`
+    console.log(chalk.red.bold(text))
+    logger.warn(text)
+  },
+
+  info: (msg) => {
+    console.log(chalk.cyan(`ℹ️ ${msg}`))
+    logger.info(msg)
+  },
+
+  success: (msg) => {
+    console.log(chalk.green(`✅ ${msg}`))
+    logger.info(msg)
+  },
+
+  warn: (msg) => {
+    console.log(chalk.yellow(`⚠️ ${msg}`))
+    logger.warn(msg)
+  },
+
+  error: (err) => {
+    console.log(chalk.red(`❌ ${err.message || err}`))
+    logger.error(err)
+  },
+
+  debug: (msg) => {
+    if (ENV !== "production") {
+      console.log(chalk.magenta(`🐞 ${msg}`))
+      logger.debug(msg)
+    }
+  },
+
+  // 📩 Incoming message
+  incoming: (from, name, message) => {
+    const text = `📩 FROM ${name || "Unknown"} (${from}) → ${message}`
+    console.log(chalk.blue(text))
+    logger.info(text)
+  },
+
+  // 📤 Outgoing message
+  outgoing: (to, message) => {
+    const text = `📤 TO ${to} → ${message}`
+    console.log(chalk.green(text))
+    logger.info(text)
+  },
+
+  // 📊 Command usage
+  command: (cmd, user) => {
+    const text = `🤖 COMMAND "${cmd}" used by ${user}`
+    console.log(chalk.hex("#00FFD1")(text))
+    logger.info(text)
+  },
+
+  // 👥 Group events
+  group: (action, groupName, user) => {
+    const text = `👥 GROUP ${action} | ${user} in ${groupName}`
+    console.log(chalk.yellow(text))
+    logger.info(text)
+  },
+
+  // ❤️ Message reactions
+  reaction: (user, emoji, message) => {
+    const text = `❤️ REACTION ${emoji} from ${user} → "${message}"`
+    console.log(chalk.redBright(text))
+    logger.info(text)
+  },
+
+  // 👀 Status viewed
+  statusView: (user) => {
+    const text = `👀 STATUS VIEWED by ${user}`
+    console.log(chalk.magentaBright(text))
+    logger.info(text)
+  },
+
+  // 🔥 Status reaction
+  statusReaction: (user, emoji) => {
+    const text = `🔥 STATUS REACTION ${emoji} from ${user}`
+    console.log(chalk.hex("#FF7A00")(text))
+    logger.info(text)
   }
-};
 
-module.exports = log;
+}
+
+
+// Catch crashes (important)
+process.on("uncaughtException", (err) => {
+  log.error("UNCAUGHT EXCEPTION: " + err.stack)
+})
+
+process.on("unhandledRejection", (reason) => {
+  log.error("UNHANDLED PROMISE: " + reason)
+})
+
+module.exports = log
