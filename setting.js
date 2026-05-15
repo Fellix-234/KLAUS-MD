@@ -1,0 +1,92 @@
+/*
+  ──────────────────────────────────────────────
+   🧠  KLAUS MD — Environment Configuration
+  ──────────────────────────────────────────────
+  All settings are loaded from process.env with
+  sensible fallbacks.  Keep this file clean and
+  well‑structured – it’s the brain of your bot.
+  ──────────────────────────────────────────────
+*/
+
+// ─── Helper Utilities ────────────────────────
+function cleanNumber(raw) {
+  return String(raw || '').replace(/[^0-9]/g, '');
+}
+
+function fromEnv(name, fallback) {
+  const value = process.env[name];
+  return value === undefined || value === null || value === '' ? fallback : value;
+}
+
+function parsePort(value, fallback) {
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function parseBool(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+// ─── Core Bot Settings ───────────────────────
+const settings = {
+  // 🔑 Session (use SESSION=blinder~YOUR_MEGA_FILE_ID in Pterodactyl)
+  SESSION: fromEnv('SESSION', ''),
+
+  // ⚙️ Basic Behaviour
+  PREFIX: fromEnv('PREFIX', '.'),
+  MODE: fromEnv('MODE', 'public'),           // 'public' or 'private'
+
+  // 👤 Ownership
+  OWNER_NUMBER: cleanNumber(fromEnv('OWNER_NUMBER', '2340000000000')),
+  OWNER_NAME: fromEnv('OWNER_NAME', 'Klaus Owner'),
+
+  // 🧑‍💻 Developer Info
+  DEVELOPER_NUMBER: cleanNumber(fromEnv('DEVELOPER_NUMBER', '254725391914')),
+  DEVELOPER_NAME: fromEnv('DEVELOPER_NAME', 'Warrior Felix'),
+
+  // 🌐 Server & Keep‑Alive
+  PORT: parsePort(fromEnv('PORT', '3000'), 3000),
+  SESSION_SERVER_PORT: parsePort(fromEnv('SESSION_SERVER_PORT', '3001'), 3001),
+  KEEP_ALIVE_URL: fromEnv('KEEP_ALIVE_URL', ''),
+
+  // 🤖 Bot Identity
+  BOT_NAME: fromEnv('BOT_NAME', 'KLAUS MD'),
+  APP_MODE: fromEnv('APP_MODE', 'bot'),
+
+  // 📦 External Source (optional dynamic updates)
+  BOT_SOURCE_DIR: fromEnv('BOT_SOURCE_DIR', ''),
+  BOT_SOURCE_REPO: fromEnv('BOT_SOURCE_REPO', ''),
+  BOT_SOURCE_BRANCH: fromEnv('BOT_SOURCE_BRANCH', 'main'),
+  BOT_SOURCE_TOKEN: fromEnv('BOT_SOURCE_TOKEN', ''),
+
+  // ─── AI Integrations ──────────────────────
+  AI: {
+    OPENAI_API_KEY: fromEnv('OPENAI_API_KEY', ''),
+    OPENAI_MODEL: fromEnv('OPENAI_MODEL', 'gpt-4o-mini'),
+    OPENAI_API_URL: fromEnv('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions'),
+
+    GEMINI_API_KEY: fromEnv('GEMINI_API_KEY', ''),
+    GEMINI_MODEL: fromEnv('GEMINI_MODEL', 'gemini-1.5-flash'),
+
+    COPILOT_API_KEY: fromEnv('COPILOT_API_KEY', ''),
+    COPILOT_API_URL: fromEnv('COPILOT_API_URL', ''),
+    COPILOT_MODEL: fromEnv('COPILOT_MODEL', 'gpt-4o-mini')
+  },
+
+  // ─── Downloader Module ────────────────────
+  DOWNLOADER: {
+    ENABLED: parseBool(fromEnv('DOWNLOADER_ENABLED', ''), false),
+    API_BASE_URL: fromEnv('DOWNLOADER_API_BASE_URL', ''),
+    ENDPOINT: fromEnv('DOWNLOADER_ENDPOINT', '/download'),
+    API_KEY: fromEnv('DOWNLOADER_API_KEY', ''),
+    API_KEY_HEADER: fromEnv('DOWNLOADER_API_KEY_HEADER', 'x-api-key'),
+    API_KEY_QUERY_NAME: fromEnv('DOWNLOADER_API_KEY_QUERY_NAME', 'apikey'),
+    DEFAULT_QUALITY: fromEnv('DOWNLOADER_DEFAULT_QUALITY', '128')
+  }
+};
+
+module.exports = settings;
