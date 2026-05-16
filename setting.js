@@ -49,7 +49,7 @@ const settings = {
   DEVELOPER_NAME: fromEnv('DEVELOPER_NAME', 'Warrior Felix'),
 
   // 🌐 Server & Keep‑Alive
-  PORT: parsePort(fromEnv('PORT', '3000'), 3000),
+  PORT: parsePort(fromEnv('PORT', '3002'), 3002),
   SESSION_SERVER_PORT: parsePort(fromEnv('SESSION_SERVER_PORT', '3001'), 3001),
   KEEP_ALIVE_URL: fromEnv('KEEP_ALIVE_URL', ''),
 
