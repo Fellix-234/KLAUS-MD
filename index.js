@@ -377,18 +377,6 @@ if (!sock.authState.creds.registered) {
     return;
   }
 
-  // ===== CONNECTION CLOSED =====
-  if (connection === 'close') {
-    const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
-    const reason = DisconnectReason[statusCode] || statusCode;
-
-    logger.error(`❌ Connection closed. Reason: ${reason}`);
-
-    writeSessionStatus({
-      connection: 'closed',
-      reason: reason,
-      closedAt: new Date().toISOString()
-    });
 
     // ===== LOGGED OUT =====
     if (statusCode === DisconnectReason.loggedOut) {
