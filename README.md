@@ -1,7 +1,7 @@
 with fe<h1 align="center">KLAUS-MD</h1>
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&pause=1200&color=00C2FF&center=true&vCenter=true&width=760&lines=KLAUS-MD+coded+bt+Warrior+Felix" alt="typing svg" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&pause=1200&color=00C2FF&center=true&vCenter=true&width=760&lines=KLAUS-MD+coded+by+Warrior+Felix" alt="typing svg" />
 </p>
 
 <p align="center">
