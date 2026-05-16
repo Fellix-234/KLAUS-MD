@@ -1,4 +1,4 @@
-const { handleCommand } = require("./commands");
+const { handleCommand } = require("../commands/menuHandler");
 
 function setupMessageHandler(sock) {
 
