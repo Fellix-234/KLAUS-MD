@@ -407,19 +407,7 @@ if (!sock.authState.creds.registered) {
       return;
     }
 
-    if (connection === 'close') {
-      const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-      if (shouldReconnect) {
-        metrics.reconnects += 1;
-        logger.warn(`Socket closed; reconnecting=${shouldReconnect} status=${statusCode || 'unknown'}`);
-        setTimeout(() => startBot(), 5000);
-      } else {
-        logger.error('Socket closed because the session logged out. Restart the bot after re-linking.');
-      }
-    }
-  });
+    
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
