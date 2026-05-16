@@ -403,11 +403,6 @@ if (!sock.authState.creds.registered) {
     setTimeout(() => startBot(), 5000);
   }
 });
-      await notifyOwnerDeployment();
-      return;
-    }
-
-    
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
