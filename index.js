@@ -321,24 +321,88 @@ async function startBot() {
     syncFullHistory: false,
     browser: ['KLAUS MD', 'Desktop', '1.0.0']
   });
+// ===== PAIRING CODE LOGIN =====
+if (!sock.authState.creds.registered) {
+  logger.warn('🔑 No active session detected.');
+  logger.info('Requesting WhatsApp pairing code...');
 
+  const phoneNumber = ENV.PAIR_NUMBER || ENV.OWNER_NUMBER;
+
+  if (!phoneNumber) {
+    logger.error('❌ No phone number found for pairing!');
+    logger.error('Add PAIR_NUMBER=2547xxxxxxx in env.');
+  } else {
+    try {
+      const code = await sock.requestPairingCode(phoneNumber);
+      logger.success(`📲 Pairing code: ${code}`);
+      logger.info('Open WhatsApp > Linked devices > Link with code');
+    } catch (err) {
+      logger.error('Failed to get pairing code: ' + err);
+    }
+  }
+              }
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
+  const { connection, lastDisconnect} = update;
 
-    if (connection === 'connecting') {
-      logger.connection('Connecting to WhatsApp servers...');
+
+  // ===== CONNECTING =====
+  if (connection === 'connecting') {
+    logger.connection('🔄 Connecting to WhatsApp servers...');
+    writeSessionStatus({ connection: 'connecting' });
+    return;
+  }
+
+  // ===== CONNECTED SUCCESSFULLY =====
+  if (connection === 'open') {
+    logger.success('✅ WhatsApp connected successfully!');
+    logger.info(`📱 Logged in as: ${sock.user?.name || 'Unknown'}`);
+    logger.info(`🆔 Bot number: ${sock.user?.id.split(':')[0]}`);
+
+    writeSessionStatus({
+      connection: 'open',
+      connectedNumber: sock.user?.id.split(':')[0],
+      connectedAt: new Date().toISOString()
+    });
+
+    logger.step(5, 6, 'Connection established');
+    logger.banner({
+      botName: ENV.BOT_NAME,
+      prefix: getActivePrefix(),
+      mode: ENV.MODE
+    });
+
+    await notifyOwnerDeployment();
+    return;
+  }
+
+  // ===== CONNECTION CLOSED =====
+  if (connection === 'close') {
+    const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
+    const reason = DisconnectReason[statusCode] || statusCode;
+
+    logger.error(`❌ Connection closed. Reason: ${reason}`);
+
+    writeSessionStatus({
+      connection: 'closed',
+      reason: reason,
+      closedAt: new Date().toISOString()
+    });
+
+    // ===== LOGGED OUT =====
+    if (statusCode === DisconnectReason.loggedOut) {
+      logger.error('🚪 Session logged out!');
+      logger.warn('Delete the session folder and re-pair the bot.');
       return;
     }
 
-    if (connection === 'open') {
-      logger.step(5, 6, 'Connection established');
-      logger.banner({
-        botName: ENV.BOT_NAME,
-        prefix: getActivePrefix(),
-        mode: ENV.MODE
-      });
+    // ===== RECONNECT =====
+    logger.warn('♻️ Reconnecting in 5 seconds...');
+    metrics.reconnects += 1;
+    setTimeout(() => startBot(), 5000);
+  }
+});
       await notifyOwnerDeployment();
       return;
     }
