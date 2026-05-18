@@ -347,6 +347,7 @@ if (!sock.authState.creds.registered) {
   sock.ev.on('connection.update', async (update) => {
   const { connection, lastDisconnect } = update;
 const statusCode = lastDisconnect?.error?.output?.statusCode;
+
     
 
 
