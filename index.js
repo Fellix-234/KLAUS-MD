@@ -393,7 +393,7 @@ const statusCode = lastDisconnect?.error?.output?.statusCode;
     logger.warn('♻️ Reconnecting in 5 seconds...');
     metrics.reconnects += 1;
     setTimeout(() => startBot(), 5000);
-  }
+  
 });
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
